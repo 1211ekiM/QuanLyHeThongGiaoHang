@@ -1,0 +1,78 @@
+﻿<div id="map" style="height:400px"></div>
+
+<button type="button" id="btnCheckIn"
+        class="btn btn-primary">
+    Check-in vị trí hiện tại
+</button>
+
+<div id="trackingMessage" class="mt-3"></div>
+
+<form id="trackingForm">
+    @Html.AntiForgeryToken()
+</form>
+
+<script>
+    const shipmentId = Number(
+        new URLSearchParams(location.search).get("shipmentId"));
+
+    document.getElementById("btnCheckIn").addEventListener(
+        "click", () => {
+            if (!navigator.geolocation) {
+                showMessage("Trình duyệt không hỗ trợ GPS.");
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                async position => {
+                    const data = {
+                        shipmentId,
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude,
+                        accuracyMeters: position.coords.accuracy,
+                        note: "Check-in từ trình duyệt"
+                    };
+
+                    const token = document.querySelector(
+                        'input[name="__RequestVerificationToken"]'
+                    ).value;
+
+                    const response = await fetch(
+                        "/Tracking/CheckIn", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "RequestVerificationToken": token
+                            },
+                            body: JSON.stringify(data)
+                        });
+
+                    if (!response.ok) {
+                        showMessage("Không thể lưu vị trí.");
+                        return;
+                    }
+
+                    showMessage("Đã lưu check-in GPS.");
+                    updateMap(data.latitude, data.longitude);
+                },
+                error => showMessage(
+                    "Không lấy được GPS: " + error.message),
+                { enableHighAccuracy: true, timeout: 10000 }
+            );
+        });
+
+    function showMessage(message) {
+        document.getElementById("trackingMessage").textContent =
+            message;
+    }
+
+    function updateMap(lat, lng) {
+        if (window.deliveryMap && window.google?.maps) {
+            window.deliveryMap.setCenter({ lat, lng });
+            new google.maps.marker.AdvancedMarkerElement({
+                map: window.deliveryMap,
+                position: { lat, lng },
+                title: "Vị trí check-in"
+            });
+        }
+    }
+</script>

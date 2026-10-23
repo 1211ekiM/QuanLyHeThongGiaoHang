@@ -1,0 +1,153 @@
+﻿@model DeliveryManagement.ViewModels.OrderSearchViewModel
+
+@{
+    ViewData["Title"] = "Quản lý đơn hàng";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold">Quản lý đơn hàng</h2>
+            <p class="text-secondary mb-0">
+                Tra cứu và xử lý đơn giao hàng
+            </p>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["Success"]
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["Error"]
+        </div>
+    }
+
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Mã đơn / khách hàng</label>
+                    <input name="keyword" value="@Model.Keyword"
+                           class="form-control"
+                           placeholder="Nhập mã đơn, tên hoặc số điện thoại" />
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">Trạng thái</label>
+                    <select name="status" class="form-select">
+                        <option value="">Tất cả</option>
+                        <option value="NotReceived">Chưa nhận</option>
+                        <option value="Received">Đã nhận - Chưa giao</option>
+                        <option value="Delivering">Đang giao</option>
+                        <option value="Delivered">Đã giao</option>
+                        <option value="DeliveryFailed">Giao thất bại</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3 d-flex align-items-end">
+                    <button class="btn btn-primary w-100">
+                        <i class="bi bi-search"></i> Tìm kiếm
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Mã đơn</th>
+                            <th>Khách hàng</th>
+                            <th>Ngày tạo</th>
+                            <th>Phí giao</th>
+                            <th>COD</th>
+                            <th>Trạng thái</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var order in Model.Orders)
+                        {
+                            <tr>
+                                <td class="fw-semibold">
+                                    @order.ExternalOrderCode
+                                </td>
+                                <td>
+                                    @order.Customer.FullName
+                                    <div class="small text-secondary">
+                                        @order.Customer.Phone
+                                    </div>
+                                </td>
+                                <td>
+                                    @order.CreatedAt.ToLocalTime()
+                                    .ToString("dd/MM/yyyy HH:mm")
+                                </td>
+                                <td>
+                                    @order.ShippingFee.ToString("N0") ₫
+                                </td>
+                                <td>
+                                    @order.CodAmount.ToString("N0") ₫
+                                </td>
+                                <td>
+                                    @switch (order.Status)
+                                    {
+                                        case "Delivered":
+                                            <span class="badge text-bg-success">
+                                                Đã giao
+                                            </span>
+                                            break;
+                                        case "Delivering":
+                                            <span class="badge text-bg-primary">
+                                                Đang giao
+                                            </span>
+                                            break;
+                                        case "Received":
+                                            <span class="badge text-bg-info">
+                                                Đã nhận
+                                            </span>
+                                            break;
+                                        default:
+                                            <span class="badge text-bg-warning">
+                                                @order.Status
+                                            </span>
+                                            break;
+                                    }
+                                </td>
+                                <td>
+                                    <a asp-action="Details"
+                                       asp-route-id="@order.Id"
+                                       class="btn btn-sm btn-outline-primary">
+                                        Chi tiết
+                                    </a>
+
+                                    @if (order.Status == "NotReceived")
+                                    {
+                                        <form asp-action="Receive"
+                                              asp-route-id="@order.Id"
+                                              method="post"
+                                              class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit"
+                                                    class="btn btn-sm btn-success">
+                                                Tiếp nhận
+                                            </button>
+                                        </form>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

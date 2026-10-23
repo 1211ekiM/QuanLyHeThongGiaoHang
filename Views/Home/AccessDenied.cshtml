@@ -1,0 +1,19 @@
+﻿@{
+    ViewData["Title"] = "Không có quyền truy cập";
+    Layout = "/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container py-5 text-center">
+    <h1 class="text-danger">403 - Không có quyền truy cập</h1>
+
+    <p class="mt-3">
+        Bạn đã đăng nhập nhưng tài khoản không có quyền
+        truy cập chức năng này.
+    </p>
+
+    <a asp-controller="Dashboard"
+       asp-action="Index"
+       class="btn btn-primary mt-3">
+        Quay lại trang chủ
+    </a>
+</div>
